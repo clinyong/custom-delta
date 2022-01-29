@@ -2,6 +2,40 @@ import AttributeMap from './AttributeMap';
 import Op from './Op';
 import OpIterator from './OpIterator';
 
+// 当两个操作都是 retain 并且都有 attributes 时，需要对 attributes 做下 transform
+// 假设 A 为 retain(1, { color: 'blue' })
+// B 为 retain(1, { bold: true, color: 'red' })
+// A.transform(B, true)， B 中的属性值只有当没有在 A 当中才会被添加
+// A.transform(B, false)，B 的所有属性都会被返回
+// B.transform(A, true)，没有任何属性返回，A 的 retain 最终会被舍弃
+// B.transform(A, false)，A 的所有属性都会被返回
+function transformAttributes(
+  thisAttributes: AttributeMap | undefined,
+  otherAttributes: AttributeMap | undefined,
+  priority: boolean | undefined,
+): AttributeMap | undefined {
+  if (thisAttributes && otherAttributes) {
+    if (priority) {
+      const finalAttributes: AttributeMap = {};
+      for (const key in otherAttributes) {
+        if (!thisAttributes[key]) {
+          finalAttributes[key] = otherAttributes[key];
+        }
+      }
+
+      return Object.keys(finalAttributes).length > 0
+        ? finalAttributes
+        : undefined;
+    } else {
+      return otherAttributes;
+    }
+  } else if (otherAttributes) {
+    return otherAttributes;
+  }
+
+  return undefined;
+}
+
 export default class Delta {
   ops: Op[];
 
@@ -135,6 +169,23 @@ export default class Delta {
         // 而此时 A 的文档内容为 a，要应用上 B，直接 insert b 就可以
         thisIter.next();
         delta._push(otherIter.next());
+      } else if (
+        thisIter.peekType() === 'retain' &&
+        otherIter.peekType() === 'retain'
+      ) {
+        const thisAttributes = thisIter.next().attributes;
+        const otherOp = otherIter.next();
+        const otherAttributes = otherOp.attributes;
+
+        const finalAttributes: AttributeMap | undefined = transformAttributes(
+          thisAttributes,
+          otherAttributes,
+          priority,
+        );
+        // Delta 的实现，只有当 transform 之后还有 attributes 的时候才 retain
+        if (finalAttributes) {
+          delta.retain(Op.length(otherOp), finalAttributes);
+        }
       }
     }
 

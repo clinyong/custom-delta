@@ -55,4 +55,26 @@ describe('transform()', () => {
     const expected = new Delta().insert('B');
     expect(a.transform(b, true)).toEqual(expected);
   });
+
+  it('retain + retain', () => {
+    const a1 = new Delta().retain(1, { color: 'blue' });
+    const b1 = new Delta().retain(1, { bold: true, color: 'red' });
+    const a2 = new Delta().retain(1, { color: 'blue' });
+    const b2 = new Delta().retain(1, { bold: true, color: 'red' });
+    const expected1 = new Delta().retain(1, { bold: true });
+    const expected2 = new Delta();
+    expect(a1.transform(b1, true)).toEqual(expected1);
+    expect(b2.transform(a2, true)).toEqual(expected2);
+  });
+
+  it('retain + retain without priority', () => {
+    const a1 = new Delta().retain(1, { color: 'blue' });
+    const b1 = new Delta().retain(1, { bold: true, color: 'red' });
+    const a2 = new Delta().retain(1, { color: 'blue' });
+    const b2 = new Delta().retain(1, { bold: true, color: 'red' });
+    const expected1 = new Delta().retain(1, { bold: true, color: 'red' });
+    const expected2 = new Delta().retain(1, { color: 'blue' });
+    expect(a1.transform(b1, false)).toEqual(expected1);
+    expect(b2.transform(a2, false)).toEqual(expected2);
+  });
 });
