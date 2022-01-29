@@ -65,6 +65,19 @@ export default class Delta {
           thisIter.next();
           delta._push(otherIter.next());
         }
+      } else if (
+        thisIter.peekType() === 'insert' &&
+        otherIter.peekType() === 'retain'
+      ) {
+        // 假设 A 插入一个字符 a，B retain 一个字符
+        // 这时候 priority 不管传什么都是先 retain 一个字符，再 retain B
+        // 下面解释下为什么是这样一个结果
+        // 假设现在的文档内容是 b
+        // A 插入一个字符 a，说明这个字符是插在 b 前面的，也就是变成了 ab。（如果是插在 b 后面，会先 retain 一个字符）
+        // B 是 retain 一个字符，也就是 retain 原先的字符 b
+        // 所以当 A.transform(B)，就是代表着 B 这个 delta 来到了 A 这边之后要怎么应用上去
+        // 而此时 A 的文档内容为 ab，如果 B 要应用上面的话，就应该变成先 retain 一个字符，再 retain B 原先的操作
+        delta.retain(Op.length(thisIter.next()))._push(otherIter.next());
       }
     }
 
