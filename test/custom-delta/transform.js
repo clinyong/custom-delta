@@ -48,4 +48,11 @@ describe('transform()', () => {
     const expected = new Delta();
     expect(a.transform(b, true)).toEqual(expected);
   });
+
+  it('retain + insert', () => {
+    const a = new Delta().retain(1, { color: 'blue' });
+    const b = new Delta().insert('B');
+    const expected = new Delta().insert('B');
+    expect(a.transform(b, true)).toEqual(expected);
+  });
 });

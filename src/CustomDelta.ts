@@ -99,7 +99,7 @@ export default class Delta {
         // 下面解释下为什么是这样一个结果
         // 假设现在的文档内容是 a
         // A delete 一个字符就是删除了 a
-        // B insert 一个字符 b，也就是在 a 前面插入一个 b，变成 ab
+        // B insert 一个字符 b，也就是在 a 前面插入一个 b，变成 ba
         // 所以当 A.transform(B)，就是代表着 B 这个 delta 来到了 A 这边之后要怎么应用上去
         // 而此时 A 的文档内容为空，要应用上 B，直接 insert b 就可以
         thisIter.next();
@@ -120,6 +120,21 @@ export default class Delta {
         // 这种情况下 A 和 B 是删除同一个字符，为了避免删除两次，应该要舍弃掉 B 这一次的删除。所以最终的 Delta 为空。
         thisIter.next();
         otherIter.next();
+      } else if (
+        thisIter.peekType() === 'retain' &&
+        otherIter.peekType() === 'insert'
+      ) {
+        // 类似于 delete + insert 的场景
+        // 假设 A retain 一个字符，B insert 一个字符 b
+        // 这时候 priority 不管传什么都是 insert 一个 b
+        // 下面解释下为什么是这样一个结果
+        // 假设现在的文档内容是 a
+        // A retain 一个字符就是 retain a
+        // B insert 一个字符 b，也就是在 a 前面插入一个 b，变成 ba
+        // 所以当 A.transform(B)，就是代表着 B 这个 delta 来到了 A 这边之后要怎么应用上去
+        // 而此时 A 的文档内容为 a，要应用上 B，直接 insert b 就可以
+        thisIter.next();
+        delta._push(otherIter.next());
       }
     }
 
