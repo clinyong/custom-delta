@@ -89,6 +89,21 @@ export default class Delta {
       ) {
         // 这个场景等同于 insert + retain
         delta.retain(Op.length(thisIter.next()))._push(otherIter.next());
+      } else if (
+        thisIter.peekType() === 'delete' &&
+        otherIter.peekType() === 'insert'
+      ) {
+        // 这个场景其实也类似 insert + retain
+        // 假设 A delete 一个字符，B insert 一个字符 b
+        // 这时候 priority 不管传什么都是 insert 一个 b
+        // 下面解释下为什么是这样一个结果
+        // 假设现在的文档内容是 a
+        // A delete 一个字符就是删除了 a
+        // B insert 一个字符 b，也就是在 a 前面插入一个 b，变成 ab
+        // 所以当 A.transform(B)，就是代表着 B 这个 delta 来到了 A 这边之后要怎么应用上去
+        // 而此时 A 的文档内容为空，要应用上 B，直接 insert b 就可以
+        thisIter.next();
+        delta._push(otherIter.next());
       }
     }
 
