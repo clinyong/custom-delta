@@ -34,4 +34,11 @@ describe('transform()', () => {
     const expected = new Delta().insert('B');
     expect(a.transform(b, true)).toEqual(expected);
   });
+
+  it('delete + retain', () => {
+    const a = new Delta().delete(1);
+    const b = new Delta().retain(1, { bold: true, color: 'red' });
+    const expected = new Delta();
+    expect(a.transform(b, true)).toEqual(expected);
+  });
 });

@@ -104,6 +104,14 @@ export default class Delta {
         // 而此时 A 的文档内容为空，要应用上 B，直接 insert b 就可以
         thisIter.next();
         delta._push(otherIter.next());
+      } else if (
+        thisIter.peekType() === 'delete' &&
+        otherIter.peekType() === 'retain'
+      ) {
+        // 类似于 delete + insert
+        // 因为 B retain 的这个字符已经被 A 删掉了，所以整个 Delta 就是为空
+        thisIter.next();
+        otherIter.next();
       }
     }
 
