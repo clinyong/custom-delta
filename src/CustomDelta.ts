@@ -112,6 +112,14 @@ export default class Delta {
         // 因为 B retain 的这个字符已经被 A 删掉了，所以整个 Delta 就是为空
         thisIter.next();
         otherIter.next();
+      } else if (
+        thisIter.peekType() === 'delete' &&
+        otherIter.peekType() === 'delete'
+      ) {
+        // 类似于 delete + retain
+        // 这种情况下 A 和 B 是删除同一个字符，为了避免删除两次，应该要舍弃掉 B 这一次的删除。所以最终的 Delta 为空。
+        thisIter.next();
+        otherIter.next();
       }
     }
 
