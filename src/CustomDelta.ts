@@ -40,6 +40,11 @@ export default class Delta {
     return this._push(op);
   }
 
+  delete(length: number): this {
+    if (length <= 0) return this;
+    return this._push({ delete: length });
+  }
+
   transform(other: Delta, priority?: boolean): Delta {
     const thisIter = new OpIterator(this.ops);
     const otherIter = new OpIterator(other.ops);
@@ -77,6 +82,12 @@ export default class Delta {
         // B 是 retain 一个字符，也就是 retain 原先的字符 b
         // 所以当 A.transform(B)，就是代表着 B 这个 delta 来到了 A 这边之后要怎么应用上去
         // 而此时 A 的文档内容为 ab，如果 B 要应用上面的话，就应该变成先 retain 一个字符，再 retain B 原先的操作
+        delta.retain(Op.length(thisIter.next()))._push(otherIter.next());
+      } else if (
+        thisIter.peekType() === 'insert' &&
+        otherIter.peekType() === 'delete'
+      ) {
+        // 这个场景等同于 insert + retain
         delta.retain(Op.length(thisIter.next()))._push(otherIter.next());
       }
     }

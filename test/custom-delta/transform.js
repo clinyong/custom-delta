@@ -20,4 +20,11 @@ describe('transform()', () => {
       .retain(1, { bold: true, color: 'red' });
     expect(a.transform(b, true)).toEqual(expected);
   });
+
+  it('insert + delete', () => {
+    const a = new Delta().insert('A');
+    const b = new Delta().delete(1);
+    const expected = new Delta().retain(1).delete(1);
+    expect(a.transform(b, true)).toEqual(expected);
+  });
 });
