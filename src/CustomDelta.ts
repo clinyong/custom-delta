@@ -186,6 +186,17 @@ export default class Delta {
         if (finalAttributes) {
           delta.retain(Op.length(otherOp), finalAttributes);
         }
+      } else if (
+        thisIter.peekType() === 'retain' &&
+        otherIter.peekType() === 'delete'
+      ) {
+        // 类似于 retain + insert 的场景
+        thisIter.next();
+        delta._push(otherIter.next());
+      } else {
+        throw new Error(
+          `Unable to handle ${thisIter.peekType()} + ${otherIter.peekType()}`,
+        );
       }
     }
 

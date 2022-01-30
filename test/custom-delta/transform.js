@@ -77,4 +77,11 @@ describe('transform()', () => {
     expect(a1.transform(b1, false)).toEqual(expected1);
     expect(b2.transform(a2, false)).toEqual(expected2);
   });
+
+  it('retain + delete', () => {
+    const a = new Delta().retain(1, { color: 'blue' });
+    const b = new Delta().delete(1);
+    const expected = new Delta().delete(1);
+    expect(a.transform(b, true)).toEqual(expected);
+  });
 });
