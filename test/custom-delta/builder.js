@@ -127,3 +127,34 @@ describe('delete()', function () {
     expect(delta.ops[0]).toEqual({ delete: 1 });
   });
 });
+
+describe('retain()', function () {
+  it('retain(0)', function () {
+    const delta = new Delta().retain(0);
+    expect(delta.ops.length).toEqual(0);
+  });
+
+  it('retain(length)', function () {
+    const delta = new Delta().retain(2);
+    expect(delta.ops.length).toEqual(1);
+    expect(delta.ops[0]).toEqual({ retain: 2 });
+  });
+
+  it('retain(length, null)', function () {
+    const delta = new Delta().retain(2, null);
+    expect(delta.ops.length).toEqual(1);
+    expect(delta.ops[0]).toEqual({ retain: 2 });
+  });
+
+  it('retain(length, attributes)', function () {
+    const delta = new Delta().retain(1, { bold: true });
+    expect(delta.ops.length).toEqual(1);
+    expect(delta.ops[0]).toEqual({ retain: 1, attributes: { bold: true } });
+  });
+
+  it('retain(length, {})', function () {
+    const delta = new Delta().retain(2, {}).delete(1); // Delete prevents chop
+    const expected = new Delta().retain(2).delete(1);
+    expect(delta).toEqual(expected);
+  });
+});
