@@ -68,21 +68,21 @@ export default class Delta {
       }
 
       // 合并两个连续的 insert 或者 retain
-      // if (beforeOp && isEqual(beforeOp.attributes, newOp.attributes)) {
-      //   if (
-      //     typeof beforeOp.insert === 'string' &&
-      //     typeof newOp.insert === 'string'
-      //   ) {
-      //     const mergeOp: Op = {
-      //       insert: beforeOp.insert + newOp.insert,
-      //     };
-      //     if (newOp.attributes) {
-      //       mergeOp.attributes = newOp.attributes;
-      //     }
-      //     this.ops[pushIndex - 1] = mergeOp;
-      //     return this;
-      //   }
-      // }
+      if (beforeOp && isEqual(beforeOp.attributes, newOp.attributes)) {
+        if (
+          typeof beforeOp.insert === 'string' &&
+          typeof newOp.insert === 'string'
+        ) {
+          const mergeOp: Op = {
+            insert: beforeOp.insert + newOp.insert,
+          };
+          if (newOp.attributes) {
+            mergeOp.attributes = newOp.attributes;
+          }
+          this.ops[pushIndex - 1] = mergeOp;
+          return this;
+        }
+      }
     }
 
     if (pushIndex === this.ops.length) {

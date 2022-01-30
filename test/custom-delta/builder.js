@@ -90,9 +90,9 @@ describe('insert()', function () {
     expect(delta).toEqual(expected);
   });
 
-//   it('insert(text) after delete with merge', function () {
-//     const delta = new Delta().insert('a').delete(1).insert('b');
-//     const expected = new Delta().insert('ab').delete(1);
-//     expect(delta).toEqual(expected);
-//   });
+  it('insert(text) after delete with merge', function () {
+    const delta = new Delta().insert('a').delete(1).insert('b');
+    const expected = new Delta().insert('ab').delete(1);
+    expect(delta).toEqual(expected);
+  });
 });
