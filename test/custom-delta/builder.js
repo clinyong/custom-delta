@@ -173,26 +173,26 @@ describe('push()', function () {
     expect(delta.ops[0]).toEqual({ delete: 5 });
   });
 
-//   it('push(op) consecutive text', function () {
-//     const delta = new Delta().insert('a');
-//     delta.push({ insert: 'b' });
-//     expect(delta.ops.length).toEqual(1);
-//     expect(delta.ops[0]).toEqual({ insert: 'ab' });
-//   });
+  it('push(op) consecutive text', function () {
+    const delta = new Delta().insert('a');
+    delta.push({ insert: 'b' });
+    expect(delta.ops.length).toEqual(1);
+    expect(delta.ops[0]).toEqual({ insert: 'ab' });
+  });
 
-//   it('push(op) consecutive texts with matching attributes', function () {
-//     const delta = new Delta().insert('a', { bold: true });
-//     delta.push({ insert: 'b', attributes: { bold: true } });
-//     expect(delta.ops.length).toEqual(1);
-//     expect(delta.ops[0]).toEqual({ insert: 'ab', attributes: { bold: true } });
-//   });
+  it('push(op) consecutive texts with matching attributes', function () {
+    const delta = new Delta().insert('a', { bold: true });
+    delta.push({ insert: 'b', attributes: { bold: true } });
+    expect(delta.ops.length).toEqual(1);
+    expect(delta.ops[0]).toEqual({ insert: 'ab', attributes: { bold: true } });
+  });
 
-//   it('push(op) consecutive retains with matching attributes', function () {
-//     const delta = new Delta().retain(1, { bold: true });
-//     delta.push({ retain: 3, attributes: { bold: true } });
-//     expect(delta.ops.length).toEqual(1);
-//     expect(delta.ops[0]).toEqual({ retain: 4, attributes: { bold: true } });
-//   });
+  it('push(op) consecutive retains with matching attributes', function () {
+    const delta = new Delta().retain(1, { bold: true });
+    delta.push({ retain: 3, attributes: { bold: true } });
+    expect(delta.ops.length).toEqual(1);
+    expect(delta.ops[0]).toEqual({ retain: 4, attributes: { bold: true } });
+  });
 
 //   it('push(op) consecutive texts with mismatched attributes', function () {
 //     const delta = new Delta().insert('a', { bold: true });

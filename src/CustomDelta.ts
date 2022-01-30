@@ -92,6 +92,18 @@ export default class Delta {
           }
           this.ops[pushIndex - 1] = mergeOp;
           return this;
+        } else if (
+          typeof beforeOp.retain === 'number' &&
+          typeof newOp.retain === 'number'
+        ) {
+          const mergeOp: Op = {
+            retain: beforeOp.retain + newOp.retain,
+          };
+          if (newOp.attributes) {
+            mergeOp.attributes = newOp.attributes;
+          }
+          this.ops[pushIndex - 1] = mergeOp;
+          return this;
         }
       }
     }
