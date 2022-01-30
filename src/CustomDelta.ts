@@ -1,3 +1,4 @@
+import isEqual from 'lodash.isequal';
 import AttributeMap from './AttributeMap';
 import Op from './Op';
 import OpIterator from './OpIterator';
@@ -49,16 +50,57 @@ export default class Delta {
     }
   }
 
-  private _push(op: Op): this {
-    this.ops.push(op);
+  private _push(newOp: Op): this {
+    let pushIndex = this.ops.length;
+    let beforeOp = this.ops[pushIndex - 1];
+
+    if (!!beforeOp) {
+      // 对于先删除一个字符再插入，和先插入一个字符再删除，这两种情况最终的文档内容都是一样的。
+      // 对于这两种情况我们都保证先 insert 再 delete
+      // 也就是对于 new Delta().delete(1).insert('a') 和 new Delta().insert('a').delete(1)
+      // 结果都是 new Delta().insert('a').delete(1)
+      if (
+        typeof beforeOp.delete === 'number' &&
+        typeof newOp.insert === 'string'
+      ) {
+        pushIndex = pushIndex - 1;
+        beforeOp = this.ops[pushIndex - 1];
+      }
+
+      // 合并两个连续的 insert 或者 retain
+      // if (beforeOp && isEqual(beforeOp.attributes, newOp.attributes)) {
+      //   if (
+      //     typeof beforeOp.insert === 'string' &&
+      //     typeof newOp.insert === 'string'
+      //   ) {
+      //     const mergeOp: Op = {
+      //       insert: beforeOp.insert + newOp.insert,
+      //     };
+      //     if (newOp.attributes) {
+      //       mergeOp.attributes = newOp.attributes;
+      //     }
+      //     this.ops[pushIndex - 1] = mergeOp;
+      //     return this;
+      //   }
+      // }
+    }
+
+    if (pushIndex === this.ops.length) {
+      this.ops.push(newOp);
+    } else {
+      this.ops.splice(pushIndex, 0, newOp);
+    }
     return this;
   }
 
-  insert(arg: string): this {
+  insert(arg: string, attribs?: AttributeMap): this {
     if (typeof arg === 'string' && arg.length === 0) return this;
     const op: Op = {
       insert: arg,
     };
+    if (attribs) {
+      op.attributes = attribs;
+    }
     return this._push(op);
   }
 

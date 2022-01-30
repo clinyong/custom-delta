@@ -84,4 +84,25 @@ describe('transform()', () => {
     const expected = new Delta().delete(1);
     expect(a.transform(b, true)).toEqual(expected);
   });
+
+  it('alternating edits', () => {
+    const a1 = new Delta().retain(2).insert('si').delete(5);
+    const b1 = new Delta()
+      .retain(1)
+      .insert('e')
+      .delete(5)
+      .retain(1)
+      .insert('ow');
+    const a2 = new Delta(a1);
+    const b2 = new Delta(b1);
+    const expected1 = new Delta()
+      .retain(1)
+      .insert('e')
+      .delete(1)
+      .retain(2)
+      .insert('ow');
+    const expected2 = new Delta().retain(2).insert('si').delete(1);
+    expect(a1.transform(b1, false)).toEqual(expected1);
+    expect(b2.transform(a2, false)).toEqual(expected2);
+  });
 });
