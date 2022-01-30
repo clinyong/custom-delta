@@ -158,3 +158,60 @@ describe('retain()', function () {
     expect(delta).toEqual(expected);
   });
 });
+
+describe('push()', function () {
+  it('push(op) into empty', function () {
+    const delta = new Delta();
+    delta.push({ insert: 'test' });
+    expect(delta.ops.length).toEqual(1);
+  });
+
+  it('push(op) consecutive delete', function () {
+    const delta = new Delta().delete(2);
+    delta.push({ delete: 3 });
+    expect(delta.ops.length).toEqual(1);
+    expect(delta.ops[0]).toEqual({ delete: 5 });
+  });
+
+//   it('push(op) consecutive text', function () {
+//     const delta = new Delta().insert('a');
+//     delta.push({ insert: 'b' });
+//     expect(delta.ops.length).toEqual(1);
+//     expect(delta.ops[0]).toEqual({ insert: 'ab' });
+//   });
+
+//   it('push(op) consecutive texts with matching attributes', function () {
+//     const delta = new Delta().insert('a', { bold: true });
+//     delta.push({ insert: 'b', attributes: { bold: true } });
+//     expect(delta.ops.length).toEqual(1);
+//     expect(delta.ops[0]).toEqual({ insert: 'ab', attributes: { bold: true } });
+//   });
+
+//   it('push(op) consecutive retains with matching attributes', function () {
+//     const delta = new Delta().retain(1, { bold: true });
+//     delta.push({ retain: 3, attributes: { bold: true } });
+//     expect(delta.ops.length).toEqual(1);
+//     expect(delta.ops[0]).toEqual({ retain: 4, attributes: { bold: true } });
+//   });
+
+//   it('push(op) consecutive texts with mismatched attributes', function () {
+//     const delta = new Delta().insert('a', { bold: true });
+//     delta.push({ insert: 'b' });
+//     expect(delta.ops.length).toEqual(2);
+//   });
+
+//   it('push(op) consecutive retains with mismatched attributes', function () {
+//     const delta = new Delta().retain(1, { bold: true });
+//     delta.push({ retain: 3 });
+//     expect(delta.ops.length).toEqual(2);
+//   });
+
+//   it('push(op) consecutive embeds with matching attributes', function () {
+//     const delta = new Delta().insert(1, { alt: 'Description' });
+//     delta.push({
+//       insert: { url: 'http://quilljs.com' },
+//       attributes: { alt: 'Description' },
+//     });
+//     expect(delta.ops.length).toEqual(2);
+//   });
+});

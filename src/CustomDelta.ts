@@ -50,11 +50,22 @@ export default class Delta {
     }
   }
 
-  private _push(newOp: Op): this {
+  push(newOp: Op): this {
     let pushIndex = this.ops.length;
     let beforeOp = this.ops[pushIndex - 1];
 
     if (!!beforeOp) {
+      // 合并连续的删除
+      if (
+        typeof beforeOp.delete === 'number' &&
+        typeof newOp.delete === 'number'
+      ) {
+        this.ops[pushIndex - 1] = {
+          delete: beforeOp.delete + newOp.delete,
+        };
+        return this;
+      }
+
       // 对于先删除一个字符再插入，和先插入一个字符再删除，这两种情况最终的文档内容都是一样的。
       // 对于这两种情况我们都保证先 insert 再 delete
       // 也就是对于 new Delta().delete(1).insert('a') 和 new Delta().insert('a').delete(1)
@@ -101,7 +112,7 @@ export default class Delta {
     if (attribs && Object.keys(attribs).length > 0) {
       op.attributes = attribs;
     }
-    return this._push(op);
+    return this.push(op);
   }
 
   retain(length: number, attribs?: AttributeMap): this {
@@ -113,12 +124,12 @@ export default class Delta {
       op.attributes = attribs;
     }
 
-    return this._push(op);
+    return this.push(op);
   }
 
   delete(length: number): this {
     if (length <= 0) return this;
-    return this._push({ delete: length });
+    return this.push({ delete: length });
   }
 
   transform(other: Delta, priority?: boolean): Delta {
@@ -137,14 +148,14 @@ export default class Delta {
           // A.transform(B, true)，第二个参数传 true 就是说当 A 和 B 冲突的时候，以谁为主，而 true 就是说以 A 为主
           // 最后文档内容为 ab，就是 A 插入的这个字符会在 B 前面
           // 表现出来的 delta 就是先 retain 一个字符（移动过字符 a），再 insert 一个 b
-          delta.retain(Op.length(thisIter.next()))._push(otherIter.next());
+          delta.retain(Op.length(thisIter.next())).push(otherIter.next());
         } else {
           // 假设 A 插入一个字符 a，B 插入一个字符 b
           // A.transform(B, false)，第二个参数传 false 就是说当 A 和 B 冲突的时候，以谁为主，而 false 就是说以 B 为主
           // 这时候文档的内容为 ba，就是 B 插入的这个字符会在 A 前面
           // 所以表现出来最终的 delta 就是只插入一个 b 的字符
           thisIter.next();
-          delta._push(otherIter.next());
+          delta.push(otherIter.next());
         }
       } else if (
         thisIter.peekType() === 'insert' &&
@@ -158,13 +169,13 @@ export default class Delta {
         // B 是 retain 一个字符，也就是 retain 原先的字符 b
         // 所以当 A.transform(B)，就是代表着 B 这个 delta 来到了 A 这边之后要怎么应用上去
         // 而此时 A 的文档内容为 ab，如果 B 要应用上面的话，就应该变成先 retain 一个字符，再 retain B 原先的操作
-        delta.retain(Op.length(thisIter.next()))._push(otherIter.next());
+        delta.retain(Op.length(thisIter.next())).push(otherIter.next());
       } else if (
         thisIter.peekType() === 'insert' &&
         otherIter.peekType() === 'delete'
       ) {
         // 这个场景等同于 insert + retain
-        delta.retain(Op.length(thisIter.next()))._push(otherIter.next());
+        delta.retain(Op.length(thisIter.next())).push(otherIter.next());
       } else if (
         thisIter.peekType() === 'delete' &&
         otherIter.peekType() === 'insert'
@@ -179,7 +190,7 @@ export default class Delta {
         // 所以当 A.transform(B)，就是代表着 B 这个 delta 来到了 A 这边之后要怎么应用上去
         // 而此时 A 的文档内容为空，要应用上 B，直接 insert b 就可以
         thisIter.next();
-        delta._push(otherIter.next());
+        delta.push(otherIter.next());
       } else if (
         thisIter.peekType() === 'delete' &&
         otherIter.peekType() === 'retain'
@@ -210,7 +221,7 @@ export default class Delta {
         // 所以当 A.transform(B)，就是代表着 B 这个 delta 来到了 A 这边之后要怎么应用上去
         // 而此时 A 的文档内容为 a，要应用上 B，直接 insert b 就可以
         thisIter.next();
-        delta._push(otherIter.next());
+        delta.push(otherIter.next());
       } else if (
         thisIter.peekType() === 'retain' &&
         otherIter.peekType() === 'retain'
@@ -234,7 +245,7 @@ export default class Delta {
       ) {
         // 类似于 retain + insert 的场景
         thisIter.next();
-        delta._push(otherIter.next());
+        delta.push(otherIter.next());
       } else {
         throw new Error(
           `Unable to handle ${thisIter.peekType()} + ${otherIter.peekType()}`,
