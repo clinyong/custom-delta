@@ -114,3 +114,16 @@ describe('insert()', function () {
     expect(delta).toEqual(expected);
   });
 });
+
+describe('delete()', function () {
+  it('delete(0)', function () {
+    const delta = new Delta().delete(0);
+    expect(delta.ops.length).toEqual(0);
+  });
+
+  it('delete(positive)', function () {
+    const delta = new Delta().delete(1);
+    expect(delta.ops.length).toEqual(1);
+    expect(delta.ops[0]).toEqual({ delete: 1 });
+  });
+});
