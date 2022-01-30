@@ -95,4 +95,22 @@ describe('insert()', function () {
     const expected = new Delta().insert('ab').delete(1);
     expect(delta).toEqual(expected);
   });
+
+  it('insert(text) after delete no merge', function () {
+    const delta = new Delta().insert(1).delete(1).insert('a');
+    const expected = new Delta().insert(1).insert('a').delete(1);
+    expect(delta).toEqual(expected);
+  });
+
+  it('insert(text) after delete no merge', function () {
+    const delta = new Delta().insert(1).delete(1).insert('a');
+    const expected = new Delta().insert(1).insert('a').delete(1);
+    expect(delta).toEqual(expected);
+  });
+
+  it('insert(text, {})', function () {
+    const delta = new Delta().insert('a', {});
+    const expected = new Delta().insert('a');
+    expect(delta).toEqual(expected);
+  });
 });

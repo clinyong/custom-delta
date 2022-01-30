@@ -98,7 +98,7 @@ export default class Delta {
     const op: Op = {
       insert: arg,
     };
-    if (attribs) {
+    if (attribs && Object.keys(attribs).length > 0) {
       op.attributes = attribs;
     }
     return this._push(op);
@@ -109,7 +109,7 @@ export default class Delta {
     const op: Op = {
       retain: length,
     };
-    if (attribs) {
+    if (attribs && Object.keys(attribs).length > 0) {
       op.attributes = attribs;
     }
 
