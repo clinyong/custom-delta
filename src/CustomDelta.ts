@@ -144,6 +144,14 @@ export default class Delta {
     return this.push({ delete: length });
   }
 
+  chop(): this {
+    const lastOp = this.ops[this.ops.length - 1];
+    if (lastOp && lastOp.retain && !lastOp.attributes) {
+      this.ops.pop();
+    }
+    return this;
+  }
+
   transform(other: Delta, priority?: boolean): Delta {
     const thisIter = new OpIterator(this.ops);
     const otherIter = new OpIterator(other.ops);
@@ -160,13 +168,12 @@ export default class Delta {
           // A.transform(B, true)，第二个参数传 true 就是说当 A 和 B 冲突的时候，以谁为主，而 true 就是说以 A 为主
           // 最后文档内容为 ab，就是 A 插入的这个字符会在 B 前面
           // 表现出来的 delta 就是先 retain 一个字符（移动过字符 a），再 insert 一个 b
-          delta.retain(Op.length(thisIter.next())).push(otherIter.next());
+          delta.retain(Op.length(thisIter.next()));
         } else {
           // 假设 A 插入一个字符 a，B 插入一个字符 b
           // A.transform(B, false)，第二个参数传 false 就是说当 A 和 B 冲突的时候，以谁为主，而 false 就是说以 B 为主
           // 这时候文档的内容为 ba，就是 B 插入的这个字符会在 A 前面
           // 所以表现出来最终的 delta 就是只插入一个 b 的字符
-          thisIter.next();
           delta.push(otherIter.next());
         }
       } else if (
@@ -181,13 +188,13 @@ export default class Delta {
         // B 是 retain 一个字符，也就是 retain 原先的字符 b
         // 所以当 A.transform(B)，就是代表着 B 这个 delta 来到了 A 这边之后要怎么应用上去
         // 而此时 A 的文档内容为 ab，如果 B 要应用上面的话，就应该变成先 retain 一个字符，再 retain B 原先的操作
-        delta.retain(Op.length(thisIter.next())).push(otherIter.next());
+        delta.retain(Op.length(thisIter.next()));
       } else if (
         thisIter.peekType() === 'insert' &&
         otherIter.peekType() === 'delete'
       ) {
         // 这个场景等同于 insert + retain
-        delta.retain(Op.length(thisIter.next())).push(otherIter.next());
+        delta.retain(Op.length(thisIter.next()));
       } else if (
         thisIter.peekType() === 'delete' &&
         otherIter.peekType() === 'insert'
@@ -201,7 +208,6 @@ export default class Delta {
         // B insert 一个字符 b，也就是在 a 前面插入一个 b，变成 ba
         // 所以当 A.transform(B)，就是代表着 B 这个 delta 来到了 A 这边之后要怎么应用上去
         // 而此时 A 的文档内容为空，要应用上 B，直接 insert b 就可以
-        thisIter.next();
         delta.push(otherIter.next());
       } else if (
         thisIter.peekType() === 'delete' &&
@@ -232,7 +238,6 @@ export default class Delta {
         // B insert 一个字符 b，也就是在 a 前面插入一个 b，变成 ba
         // 所以当 A.transform(B)，就是代表着 B 这个 delta 来到了 A 这边之后要怎么应用上去
         // 而此时 A 的文档内容为 a，要应用上 B，直接 insert b 就可以
-        thisIter.next();
         delta.push(otherIter.next());
       } else if (
         thisIter.peekType() === 'retain' &&
@@ -259,12 +264,24 @@ export default class Delta {
         thisIter.next();
         delta.push(otherIter.next());
       } else {
-        throw new Error(
-          `Unable to handle ${thisIter.peekType()} + ${otherIter.peekType()}`,
-        );
+        // 这个条件永远不会进来
+        // 因为按照原先的逻辑，如果某一个 iterator 的 ops 已经用完了，当 next 之后，如果没有值，会默认返回 retain
+        if (thisIter.hasNext()) {
+          while (thisIter.hasNext()) {
+            thisIter.next();
+          }
+        } else if (otherIter.hasNext()) {
+          while (otherIter.hasNext()) {
+            this.ops.push(otherIter.next());
+          }
+        } else {
+          throw new Error(
+            `Unable to handle ${thisIter.peekType()} + ${otherIter.peekType()}`,
+          );
+        }
       }
     }
 
-    return delta;
+    return delta.chop();
   }
 }
