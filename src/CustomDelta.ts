@@ -253,9 +253,7 @@ export default class Delta {
           priority,
         );
         // Delta 的实现，只有当 transform 之后还有 attributes 的时候才 retain
-        if (finalAttributes) {
-          delta.retain(Op.length(otherOp), finalAttributes);
-        }
+        delta.retain(Op.length(otherOp), finalAttributes);
       } else if (
         thisIter.peekType() === 'retain' &&
         otherIter.peekType() === 'delete'
