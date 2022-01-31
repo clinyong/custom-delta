@@ -215,16 +215,18 @@ export default class Delta {
       ) {
         // 类似于 delete + insert
         // 因为 B retain 的这个字符已经被 A 删掉了，所以整个 Delta 就是为空
-        thisIter.next();
-        otherIter.next();
+        const length = Math.min(thisIter.peekLength(), otherIter.peekLength());
+        thisIter.next(length);
+        otherIter.next(length);
       } else if (
         thisIter.peekType() === 'delete' &&
         otherIter.peekType() === 'delete'
       ) {
         // 类似于 delete + retain
         // 这种情况下 A 和 B 是删除同一个字符，为了避免删除两次，应该要舍弃掉 B 这一次的删除。所以最终的 Delta 为空。
-        thisIter.next();
-        otherIter.next();
+        const length = Math.min(thisIter.peekLength(), otherIter.peekLength());
+        thisIter.next(length);
+        otherIter.next(length);
       } else if (
         thisIter.peekType() === 'retain' &&
         otherIter.peekType() === 'insert'
@@ -243,8 +245,11 @@ export default class Delta {
         thisIter.peekType() === 'retain' &&
         otherIter.peekType() === 'retain'
       ) {
-        const thisAttributes = thisIter.next().attributes;
-        const otherOp = otherIter.next();
+        const length = Math.min(thisIter.peekLength(), otherIter.peekLength());
+        const thisOp = thisIter.next(length);
+        const otherOp = otherIter.next(length);
+
+        const thisAttributes = thisOp.attributes;
         const otherAttributes = otherOp.attributes;
 
         const finalAttributes: AttributeMap | undefined = transformAttributes(
@@ -259,8 +264,9 @@ export default class Delta {
         otherIter.peekType() === 'delete'
       ) {
         // 类似于 retain + insert 的场景
-        thisIter.next();
-        delta.push(otherIter.next());
+        const length = Math.min(thisIter.peekLength(), otherIter.peekLength());
+        thisIter.next(length);
+        delta.push(otherIter.next(length));
       } else {
         // 这个条件永远不会进来
         // 因为按照原先的逻辑，如果某一个 iterator 的 ops 已经用完了，当 next 之后，如果没有值，会默认返回 retain
