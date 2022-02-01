@@ -276,7 +276,8 @@ export default class Delta {
           }
         } else if (otherIter.hasNext()) {
           while (otherIter.hasNext()) {
-            this.ops.push(otherIter.next());
+            const op = otherIter.next();
+            delta.push(op);
           }
         } else {
           throw new Error(
