@@ -105,4 +105,48 @@ describe('transform()', () => {
     expect(a1.transform(b1, false)).toEqual(expected1);
     expect(b2.transform(a2, false)).toEqual(expected2);
   });
+
+  it('conflicting appends', () => {
+    const a1 = new Delta().retain(3).insert('aa');
+    const b1 = new Delta().retain(3).insert('bb');
+    const a2 = new Delta(a1);
+    const b2 = new Delta(b1);
+    const expected1 = new Delta().retain(5).insert('bb');
+    const expected2 = new Delta().retain(3).insert('aa');
+    expect(a1.transform(b1, true)).toEqual(expected1);
+    expect(b2.transform(a2, false)).toEqual(expected2);
+  });
+
+  it('prepend + append', () => {
+    const a1 = new Delta().insert('aa');
+    const b1 = new Delta().retain(3).insert('bb');
+    const expected1 = new Delta().retain(5).insert('bb');
+    const a2 = new Delta(a1);
+    const b2 = new Delta(b1);
+    const expected2 = new Delta().insert('aa');
+    expect(a1.transform(b1, false)).toEqual(expected1);
+    expect(b2.transform(a2, false)).toEqual(expected2);
+  });
+
+  it('trailing deletes with differing lengths', () => {
+    const a1 = new Delta().retain(2).delete(1);
+    const b1 = new Delta().delete(3);
+    const expected1 = new Delta().delete(2);
+    const a2 = new Delta(a1);
+    const b2 = new Delta(b1);
+    const expected2 = new Delta();
+    expect(a1.transform(b1, false)).toEqual(expected1);
+    expect(b2.transform(a2, false)).toEqual(expected2);
+  });
+
+  it('immutability', () => {
+    const a1 = new Delta().insert('A');
+    const a2 = new Delta().insert('A');
+    const b1 = new Delta().insert('B');
+    const b2 = new Delta().insert('B');
+    const expected = new Delta().retain(1).insert('B');
+    expect(a1.transform(b1, true)).toEqual(expected);
+    expect(a1).toEqual(a2);
+    expect(b1).toEqual(b2);
+  });
 });
