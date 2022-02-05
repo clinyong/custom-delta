@@ -14,4 +14,11 @@ describe('compose()', () => {
     const expected = new Delta().insert('A', { bold: true, color: 'red' });
     expect(a.compose(b)).toEqual(expected);
   });
+
+  it('insert + delete', () => {
+    const a = new Delta().insert('A');
+    const b = new Delta().delete(1);
+    const expected = new Delta();
+    expect(a.compose(b)).toEqual(expected);
+  });
 });

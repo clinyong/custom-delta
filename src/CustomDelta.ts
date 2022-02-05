@@ -226,6 +226,10 @@ export default class Delta {
             delta.push(newOp);
           })();
           break;
+        case 'insert + delete':
+          (() => {
+            dropBoth(thisIter, otherIter);
+          })();
         default:
           break;
       }
