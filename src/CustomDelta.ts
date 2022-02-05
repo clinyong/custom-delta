@@ -79,11 +79,6 @@ function keepOtherDropThis(thisIter: OpIterator, otherIter: OpIterator) {
   return otherIter.next(length);
 }
 
-function insertOtherFirst(thisIter: OpIterator, otherIter: OpIterator) {
-  const { thisOp, otherOp } = getNextOp(thisIter, otherIter);
-  return [];
-}
-
 function consumeLeft(thisIter: OpIterator, onNext?: (op: Op) => void) {
   while (thisIter.hasNext()) {
     if (onNext) {
@@ -240,6 +235,14 @@ export default class Delta {
             const { thisOp, otherOp } = getNextOp(thisIter, otherIter);
             delta.push(otherOp);
             delta.push(thisOp);
+          })();
+          break;
+        case 'delete + retain':
+          (() => {
+            const { thisOp, otherOp } = getNextOp(thisIter, otherIter);
+            otherOp.attributes = filterNullAttributes(otherOp.attributes);
+            delta.push(thisOp);
+            delta.push(otherOp);
           })();
           break;
         default:

@@ -28,4 +28,13 @@ describe('compose()', () => {
     const expected = new Delta().insert('B').delete(1);
     expect(a.compose(b)).toEqual(expected);
   });
+
+  it('delete + retain', () => {
+    const a = new Delta().delete(1);
+    const b = new Delta().retain(1, { bold: true, color: 'red' });
+    const expected = new Delta()
+      .delete(1)
+      .retain(1, { bold: true, color: 'red' });
+    expect(a.compose(b)).toEqual(expected);
+  });
 });
