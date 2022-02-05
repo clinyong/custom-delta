@@ -37,6 +37,25 @@ function transformAttributes(
   return undefined;
 }
 
+function filterNullAttributes(
+  attributes?: AttributeMap,
+): AttributeMap | undefined {
+  if (attributes) {
+    const newAttribMap = Object.keys(attributes).reduce((obj, k) => {
+      const val = attributes[k];
+      if (val != null) {
+        obj[k] = val;
+      }
+      return obj;
+    }, {} as AttributeMap);
+    if (Object.keys(newAttribMap).length > 0) {
+      return newAttribMap;
+    }
+  }
+
+  return undefined;
+}
+
 function dropBoth(thisIter: OpIterator, otherIter: OpIterator) {
   const length = Math.min(thisIter.peekLength(), otherIter.peekLength());
   thisIter.next(length);
@@ -183,6 +202,36 @@ export default class Delta {
       this.ops.pop();
     }
     return this;
+  }
+
+  compose(other: Delta): Delta {
+    const thisIter = new OpIterator(this.ops);
+    const otherIter = new OpIterator(other.ops);
+    const delta = new Delta();
+
+    while (thisIter.hasNext() || otherIter.hasNext()) {
+      const composeCase = `${thisIter.peekType()} + ${otherIter.peekType()}`;
+      switch (composeCase) {
+        case 'insert + insert':
+          delta.push(otherIter.next());
+          delta.push(thisIter.next());
+          break;
+        case 'insert + retain':
+          (() => {
+            const { thisOp, otherOp } = getNextOp(thisIter, otherIter);
+            const newOp: Op = {
+              insert: thisOp.insert,
+              attributes: filterNullAttributes(otherOp.attributes),
+            };
+            delta.push(newOp);
+          })();
+          break;
+        default:
+          break;
+      }
+    }
+
+    return delta.chop();
   }
 
   transform(other: Delta, priority?: boolean): Delta {
