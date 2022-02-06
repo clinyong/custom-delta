@@ -110,4 +110,11 @@ describe('compose()', () => {
     const expected = new Delta().insert('Hello');
     expect(a.compose(b)).toEqual(expected);
   });
+
+  it('retain empty embed', () => {
+    const a = new Delta().insert(1);
+    const b = new Delta().retain(1);
+    const expected = new Delta().insert(1);
+    expect(a.compose(b)).toEqual(expected);
+  });
 });
