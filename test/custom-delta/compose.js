@@ -124,4 +124,12 @@ describe('compose()', () => {
     const expected = new Delta().insert('A');
     expect(a.compose(b)).toEqual(expected);
   });
+
+  it('remove all embed attributes', () => {
+    // 这里是插入了一个字符 2，不是插入两个字符
+    const a = new Delta().insert(2, { bold: true });
+    const b = new Delta().retain(1, { bold: null });
+    const expected = new Delta().insert(2);
+    expect(a.compose(b)).toEqual(expected);
+  });
 });
