@@ -227,9 +227,10 @@ export default class Delta {
             );
             const newOp: Op = {
               insert: thisOp.insert,
-              attributes:
-                Object.keys(attributes).length > 0 ? attributes : undefined,
             };
+            if (Object.keys(attributes).length > 0) {
+              newOp.attributes = attributes;
+            }
             delta.push(newOp);
           })();
           break;

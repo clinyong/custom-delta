@@ -103,4 +103,11 @@ describe('compose()', () => {
     const expected = new Delta().delete(4);
     expect(a.compose(b)).toEqual(expected);
   });
+
+  it('retain more than length of text', () => {
+    const a = new Delta().insert('Hello');
+    const b = new Delta().retain(10);
+    const expected = new Delta().insert('Hello');
+    expect(a.compose(b)).toEqual(expected);
+  });
 });
