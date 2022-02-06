@@ -213,8 +213,9 @@ export default class Delta {
       const composeCase = `${thisIter.peekType()} + ${otherIter.peekType()}`;
       switch (composeCase) {
         case 'insert + insert':
-          delta.push(otherIter.next());
-          delta.push(thisIter.next());
+          (() => {
+            delta.push(otherIter.next());
+          })();
           break;
         case 'insert + retain':
           (() => {
@@ -230,49 +231,45 @@ export default class Delta {
           (() => {
             dropBoth(thisIter, otherIter);
           })();
+          break;
         case 'delete + insert':
           (() => {
-            const { thisOp, otherOp } = getNextOp(thisIter, otherIter);
-            delta.push(otherOp);
-            delta.push(thisOp);
+            delta.push(otherIter.next());
           })();
           break;
         case 'delete + retain':
           (() => {
-            const { thisOp, otherOp } = getNextOp(thisIter, otherIter);
-            otherOp.attributes = filterNullAttributes(otherOp.attributes);
-            delta.push(thisOp);
-            delta.push(otherOp);
+            delta.push(thisIter.next());
           })();
           break;
         case 'delete + delete':
           (() => {
-            const { thisOp, otherOp } = getNextOp(thisIter, otherIter);
-            delta.push({
-              delete: thisOp.delete! + otherOp.delete!,
-            });
+            delta.push(thisIter.next());
           })();
           break;
         case 'retain + insert':
           (() => {
-            const { thisOp, otherOp } = getNextOp(thisIter, otherIter);
-            delta.push(otherOp);
-            // 不会过滤掉 thisOp 里面的 null 属性
-            delta.push(thisOp);
+            delta.push(otherIter.next());
           })();
           break;
         case 'retain + retain':
           (() => {
-            const { thisOp, otherOp } = getNextOp(thisIter, otherIter);
-            delta.push({
-              retain: otherOp.retain!,
-              // 不会过滤掉 otherOp 里面的 null 属性
-              attributes: Object.assign(
-                {},
-                thisOp.attributes,
-                otherOp.attributes,
-              ),
-            });
+            if (thisIter.hasNext() && otherIter.hasNext()) {
+              const { thisOp, otherOp } = getNextOp(thisIter, otherIter);
+              delta.push({
+                retain: otherOp.retain!,
+                // 不会过滤掉 otherOp 里面的 null 属性
+                attributes: Object.assign(
+                  {},
+                  thisOp.attributes,
+                  otherOp.attributes,
+                ),
+              });
+            } else if (thisIter.hasNext()) {
+              consumeLeft(thisIter, (op) => delta.push(op));
+            } else if (otherIter.hasNext()) {
+              consumeLeft(otherIter, (op) => delta.push(op));
+            }
           })();
           break;
         case 'retain + delete':

@@ -76,4 +76,14 @@ describe('compose()', () => {
     const expected = new Delta().insert('HelXlo');
     expect(a.compose(b)).toEqual(expected);
   });
+
+  it('insert and delete ordering', () => {
+    const a = new Delta().insert('Hello');
+    const b = new Delta().insert('Hello');
+    const insertFirst = new Delta().retain(3).insert('X').delete(1);
+    const deleteFirst = new Delta().retain(3).delete(1).insert('X');
+    const expected = new Delta().insert('HelXo');
+    expect(a.compose(insertFirst)).toEqual(expected);
+    expect(b.compose(deleteFirst)).toEqual(expected);
+  });
 });
