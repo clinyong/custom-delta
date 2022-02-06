@@ -37,6 +37,25 @@ function transformAttributes(
   return undefined;
 }
 
+function filterNullAttributes(
+  attributes?: AttributeMap,
+): AttributeMap | undefined {
+  if (attributes) {
+    const newAttribMap = Object.keys(attributes).reduce((obj, k) => {
+      const val = attributes[k];
+      if (val != null) {
+        obj[k] = val;
+      }
+      return obj;
+    }, {} as AttributeMap);
+    if (Object.keys(newAttribMap).length > 0) {
+      return newAttribMap;
+    }
+  }
+
+  return undefined;
+}
+
 function dropBoth(thisIter: OpIterator, otherIter: OpIterator) {
   const length = Math.min(thisIter.peekLength(), otherIter.peekLength());
   thisIter.next(length);
@@ -183,6 +202,97 @@ export default class Delta {
       this.ops.pop();
     }
     return this;
+  }
+
+  compose(other: Delta): Delta {
+    const thisIter = new OpIterator(this.ops);
+    const otherIter = new OpIterator(other.ops);
+    const delta = new Delta();
+
+    while (thisIter.hasNext() || otherIter.hasNext()) {
+      const composeCase = `${thisIter.peekType()} + ${otherIter.peekType()}`;
+      switch (composeCase) {
+        case 'insert + insert':
+          (() => {
+            delta.push(otherIter.next());
+          })();
+          break;
+        case 'insert + retain':
+          (() => {
+            const { thisOp, otherOp } = getNextOp(thisIter, otherIter);
+            const attributes = filterNullAttributes(
+              Object.assign({}, thisOp.attributes, otherOp.attributes),
+            );
+            const newOp: Op = {
+              insert: thisOp.insert,
+            };
+            if (attributes && Object.keys(attributes).length > 0) {
+              newOp.attributes = attributes;
+            }
+            delta.push(newOp);
+          })();
+          break;
+        case 'insert + delete':
+          (() => {
+            dropBoth(thisIter, otherIter);
+          })();
+          break;
+        case 'delete + insert':
+          (() => {
+            delta.push(otherIter.next());
+          })();
+          break;
+        case 'delete + retain':
+          (() => {
+            delta.push(thisIter.next());
+          })();
+          break;
+        case 'delete + delete':
+          (() => {
+            delta.push(thisIter.next());
+          })();
+          break;
+        case 'retain + insert':
+          (() => {
+            delta.push(otherIter.next());
+          })();
+          break;
+        case 'retain + retain':
+          (() => {
+            if (thisIter.hasNext() && otherIter.hasNext()) {
+              const { thisOp, otherOp } = getNextOp(thisIter, otherIter);
+              // 不会过滤掉 otherOp 里面的 null 属性
+              const attributes = Object.assign(
+                {},
+                thisOp.attributes,
+                otherOp.attributes,
+              );
+              const newOp: Op = {
+                retain: otherOp.retain!,
+              };
+              if (Object.keys(attributes).length > 0) {
+                newOp.attributes = attributes;
+              }
+              delta.push(newOp);
+            } else if (thisIter.hasNext()) {
+              consumeLeft(thisIter, (op) => delta.push(op));
+            } else if (otherIter.hasNext()) {
+              consumeLeft(otherIter, (op) => delta.push(op));
+            }
+          })();
+          break;
+        case 'retain + delete':
+          (() => {
+            const { otherOp } = getNextOp(thisIter, otherIter);
+            delta.push(otherOp);
+          })();
+          break;
+        default:
+          break;
+      }
+    }
+
+    return delta.chop();
   }
 
   transform(other: Delta, priority?: boolean): Delta {
