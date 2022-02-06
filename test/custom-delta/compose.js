@@ -69,4 +69,11 @@ describe('compose()', () => {
     const expected = new Delta().delete(1);
     expect(a.compose(b)).toEqual(expected);
   });
+
+  it('insert in middle of text', () => {
+    const a = new Delta().insert('Hello');
+    const b = new Delta().retain(3).insert('X');
+    const expected = new Delta().insert('HelXlo');
+    expect(a.compose(b)).toEqual(expected);
+  });
 });
