@@ -37,4 +37,11 @@ describe('compose()', () => {
       .retain(1, { bold: true, color: 'red' });
     expect(a.compose(b)).toEqual(expected);
   });
+
+  it('delete + delete', () => {
+    const a = new Delta().delete(1);
+    const b = new Delta().delete(1);
+    const expected = new Delta().delete(2);
+    expect(a.compose(b)).toEqual(expected);
+  });
 });

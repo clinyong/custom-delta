@@ -245,6 +245,14 @@ export default class Delta {
             delta.push(otherOp);
           })();
           break;
+        case 'delete + delete':
+          (() => {
+            const { thisOp, otherOp } = getNextOp(thisIter, otherIter);
+            delta.push({
+              delete: thisOp.delete! + otherOp.delete!,
+            });
+          })();
+          break;
         default:
           break;
       }
