@@ -220,15 +220,13 @@ export default class Delta {
         case 'insert + retain':
           (() => {
             const { thisOp, otherOp } = getNextOp(thisIter, otherIter);
-            const attributes = Object.assign(
-              {},
-              thisOp.attributes,
-              filterNullAttributes(otherOp.attributes),
+            const attributes = filterNullAttributes(
+              Object.assign({}, thisOp.attributes, otherOp.attributes),
             );
             const newOp: Op = {
               insert: thisOp.insert,
             };
-            if (Object.keys(attributes).length > 0) {
+            if (attributes && Object.keys(attributes).length > 0) {
               newOp.attributes = attributes;
             }
             delta.push(newOp);

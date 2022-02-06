@@ -117,4 +117,11 @@ describe('compose()', () => {
     const expected = new Delta().insert(1);
     expect(a.compose(b)).toEqual(expected);
   });
+
+  it('remove all attributes', () => {
+    const a = new Delta().insert('A', { bold: true });
+    const b = new Delta().retain(1, { bold: null });
+    const expected = new Delta().insert('A');
+    expect(a.compose(b)).toEqual(expected);
+  });
 });
