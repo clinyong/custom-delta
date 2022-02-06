@@ -183,4 +183,14 @@ describe('compose()', () => {
       .delete(1);
     expect(a.compose(b)).toEqual(expected);
   });
+
+  it('retain end optimization', () => {
+    const a = new Delta()
+      .insert('A', { bold: true })
+      .insert('B')
+      .insert('C', { bold: true });
+    const b = new Delta().delete(1);
+    const expected = new Delta().insert('B').insert('C', { bold: true });
+    expect(a.compose(b)).toEqual(expected);
+  });
 });
