@@ -253,6 +253,14 @@ export default class Delta {
             });
           })();
           break;
+        case 'retain + insert':
+          (() => {
+            const { thisOp, otherOp } = getNextOp(thisIter, otherIter);
+            delta.push(otherOp);
+            // 不会过滤掉 thisOp 里面的 null 属性
+            delta.push(thisOp);
+          })();
+          break;
         default:
           break;
       }
