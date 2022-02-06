@@ -96,4 +96,11 @@ describe('compose()', () => {
     });
     expect(a.compose(b)).toEqual(expected);
   });
+
+  it('delete entire text', () => {
+    const a = new Delta().retain(4).insert('Hello');
+    const b = new Delta().delete(9);
+    const expected = new Delta().delete(4);
+    expect(a.compose(b)).toEqual(expected);
+  });
 });
