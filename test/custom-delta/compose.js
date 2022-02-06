@@ -148,4 +148,20 @@ describe('compose()', () => {
     expect(b1).toEqual(b2);
     expect(attr1).toEqual(attr2);
   });
+
+  it('retain start optimization', () => {
+    const a = new Delta()
+      .insert('A', { bold: true })
+      .insert('B')
+      .insert('C', { bold: true })
+      .delete(1);
+    const b = new Delta().retain(3).insert('D');
+    const expected = new Delta()
+      .insert('A', { bold: true })
+      .insert('B')
+      .insert('C', { bold: true })
+      .insert('D')
+      .delete(1);
+    expect(a.compose(b)).toEqual(expected);
+  });
 });
