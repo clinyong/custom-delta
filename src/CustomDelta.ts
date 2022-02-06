@@ -261,15 +261,19 @@ export default class Delta {
           (() => {
             if (thisIter.hasNext() && otherIter.hasNext()) {
               const { thisOp, otherOp } = getNextOp(thisIter, otherIter);
-              delta.push({
+              // 不会过滤掉 otherOp 里面的 null 属性
+              const attributes = Object.assign(
+                {},
+                thisOp.attributes,
+                otherOp.attributes,
+              );
+              const newOp: Op = {
                 retain: otherOp.retain!,
-                // 不会过滤掉 otherOp 里面的 null 属性
-                attributes: Object.assign(
-                  {},
-                  thisOp.attributes,
-                  otherOp.attributes,
-                ),
-              });
+              };
+              if (Object.keys(attributes).length > 0) {
+                newOp.attributes = attributes;
+              }
+              delta.push(newOp);
             } else if (thisIter.hasNext()) {
               consumeLeft(thisIter, (op) => delta.push(op));
             } else if (otherIter.hasNext()) {
