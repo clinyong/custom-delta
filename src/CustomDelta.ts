@@ -261,6 +261,20 @@ export default class Delta {
             delta.push(thisOp);
           })();
           break;
+        case 'retain + retain':
+          (() => {
+            const { thisOp, otherOp } = getNextOp(thisIter, otherIter);
+            delta.push({
+              retain: otherOp.retain!,
+              // 不会过滤掉 otherOp 里面的 null 属性
+              attributes: Object.assign(
+                {},
+                thisOp.attributes,
+                otherOp.attributes,
+              ),
+            });
+          })();
+          break;
         default:
           break;
       }

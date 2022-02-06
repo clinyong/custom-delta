@@ -51,4 +51,15 @@ describe('compose()', () => {
     const expected = new Delta().insert('B').retain(1, { color: 'blue' });
     expect(a.compose(b)).toEqual(expected);
   });
+
+  it('retain + retain', () => {
+    const a = new Delta().retain(1, { color: 'blue' });
+    const b = new Delta().retain(1, { bold: true, color: 'red', font: null });
+    const expected = new Delta().retain(1, {
+      bold: true,
+      color: 'red',
+      font: null,
+    });
+    expect(a.compose(b)).toEqual(expected);
+  });
 });
