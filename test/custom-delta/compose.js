@@ -86,4 +86,14 @@ describe('compose()', () => {
     expect(a.compose(insertFirst)).toEqual(expected);
     expect(b.compose(deleteFirst)).toEqual(expected);
   });
+
+  it('insert embed', () => {
+    const a = new Delta().insert(1, { src: 'http://quilljs.com/image.png' });
+    const b = new Delta().retain(1, { alt: 'logo' });
+    const expected = new Delta().insert(1, {
+      src: 'http://quilljs.com/image.png',
+      alt: 'logo',
+    });
+    expect(a.compose(b)).toEqual(expected);
+  });
 });
