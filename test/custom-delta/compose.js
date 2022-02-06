@@ -132,4 +132,20 @@ describe('compose()', () => {
     const expected = new Delta().insert(2);
     expect(a.compose(b)).toEqual(expected);
   });
+
+  it('immutability', () => {
+    const attr1 = { bold: true };
+    const attr2 = { bold: true };
+    const a1 = new Delta().insert('Test', attr1);
+    const a2 = new Delta().insert('Test', attr1);
+    const b1 = new Delta().retain(1, { color: 'red' }).delete(2);
+    const b2 = new Delta().retain(1, { color: 'red' }).delete(2);
+    const expected = new Delta()
+      .insert('T', { color: 'red', bold: true })
+      .insert('t', attr1);
+    expect(a1.compose(b1)).toEqual(expected);
+    expect(a1).toEqual(a2);
+    expect(b1).toEqual(b2);
+    expect(attr1).toEqual(attr2);
+  });
 });
