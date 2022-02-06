@@ -275,6 +275,12 @@ export default class Delta {
             });
           })();
           break;
+        case 'retain + delete':
+          (() => {
+            const { otherOp } = getNextOp(thisIter, otherIter);
+            delta.push(otherOp);
+          })();
+          break;
         default:
           break;
       }

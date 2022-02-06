@@ -62,4 +62,11 @@ describe('compose()', () => {
     });
     expect(a.compose(b)).toEqual(expected);
   });
+
+  it('retain + delete', () => {
+    const a = new Delta().retain(1, { color: 'blue' });
+    const b = new Delta().delete(1);
+    const expected = new Delta().delete(1);
+    expect(a.compose(b)).toEqual(expected);
+  });
 });
