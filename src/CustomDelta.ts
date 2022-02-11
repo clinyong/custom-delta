@@ -299,7 +299,7 @@ export default class Delta {
   transform(other: Delta, priority?: boolean): Delta;
   transform(other: number | Delta, priority?: boolean): typeof other {
     if (typeof other === 'number') {
-      return this.transformPosition(other);
+      return this.transformPosition(other, priority);
     }
 
     const thisIter = new OpIterator(this.ops);
@@ -410,16 +410,17 @@ export default class Delta {
     return delta.chop();
   }
 
-  transformPosition(index: number): number {
+  transformPosition(index: number, priority = false): number {
     const thisIter = new OpIterator(this.ops);
     let offset = 0;
     while (thisIter.hasNext() && offset <= index) {
       const length = thisIter.peekLength();
       const nextType = thisIter.peekType();
-      thisIter.next()
+      thisIter.next();
       if (nextType === 'delete') {
         index -= Math.min(length, index - offset);
-      } else if (nextType === 'insert') {
+      } else if (nextType === 'insert' && !priority) {
+        // insert 的情况，如果 priority 设置为 true，一律不增加 index，保持光标位置不变
         index += length;
       }
 
