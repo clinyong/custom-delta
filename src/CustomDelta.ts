@@ -295,7 +295,13 @@ export default class Delta {
     return delta.chop();
   }
 
-  transform(other: Delta, priority?: boolean): Delta {
+  transform(other: number, priority?: boolean): number;
+  transform(other: Delta, priority?: boolean): Delta;
+  transform(other: number | Delta, priority?: boolean): typeof other {
+    if (typeof other === 'number') {
+      return this.transformPosition(other);
+    }
+
     const thisIter = new OpIterator(this.ops);
     const otherIter = new OpIterator(other.ops);
 
@@ -402,5 +408,24 @@ export default class Delta {
     }
 
     return delta.chop();
+  }
+
+  transformPosition(index: number): number {
+    const thisIter = new OpIterator(this.ops);
+    let offset = 0;
+    while (thisIter.hasNext() && offset <= index) {
+      const length = thisIter.peekLength();
+      const nextType = thisIter.peekType();
+      thisIter.next()
+      if (nextType === 'delete') {
+        index -= Math.min(length, index - offset);
+      } else if (nextType === 'insert') {
+        index += length;
+      }
+
+      offset += length;
+    }
+
+    return index;
   }
 }
