@@ -419,6 +419,10 @@ export default class Delta {
       thisIter.next();
       if (nextType === 'delete') {
         index -= Math.min(length, index - offset);
+        // offset 指的是 iterator 遍历的过程中指到了哪一个字符
+        // 当删除的时候，删除了多少个字符，后面就会有多少个字符往前进
+        // 所以此时 offset 并不需要加上 index
+        continue;
       } else if (nextType === 'insert' && !priority) {
         // insert 的情况，如果 priority 设置为 true，一律不增加 index，保持光标位置不变
         index += length;
