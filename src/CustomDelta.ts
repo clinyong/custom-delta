@@ -37,6 +37,31 @@ function transformAttributes(
   return undefined;
 }
 
+function isNotExistAttribute(val: any) {
+  return typeof val === 'undefined';
+}
+
+function invertAttributes(
+  deltaAttr: AttributeMap,
+  baseAttr: AttributeMap = {},
+): AttributeMap {
+  const attr: AttributeMap = {};
+  Object.keys(deltaAttr).forEach((k) => {
+    if (deltaAttr[k] !== baseAttr[k]) {
+      if (isNotExistAttribute(deltaAttr[k])) {
+        // skip
+      } else if (isNotExistAttribute(baseAttr[k])) {
+        attr[k] = null;
+      } else {
+        // both exist
+        attr[k] = baseAttr[k];
+      }
+    }
+  });
+
+  return attr;
+}
+
 function filterNullAttributes(
   attributes?: AttributeMap,
 ): AttributeMap | undefined {
@@ -432,5 +457,33 @@ export default class Delta {
     }
 
     return index;
+  }
+
+  invert(base: Delta): Delta {
+    const thisIter = new OpIterator(this.ops);
+    const baseIter = new OpIterator(base.ops);
+    const inverted = new Delta();
+
+    while (thisIter.hasNext()) {
+      const peekOp = thisIter.peek();
+      if (peekOp.insert) {
+        inverted.delete(Op.length(peekOp));
+        thisIter.next();
+      } else if (peekOp.retain && !peekOp.attributes) {
+        const { thisOp } = getNextOp(thisIter, baseIter);
+        inverted.retain(thisOp.retain!);
+      } else if (peekOp.delete) {
+        const { otherOp: baseOp } = getNextOp(thisIter, baseIter);
+        inverted.push(baseOp);
+      } else if (peekOp.retain && peekOp.attributes) {
+        const { thisOp, otherOp: baseOp } = getNextOp(thisIter, baseIter);
+        inverted.retain(
+          thisOp.retain!,
+          invertAttributes(thisOp.attributes!, baseOp.attributes),
+        );
+      }
+    }
+
+    return inverted.chop();
   }
 }
