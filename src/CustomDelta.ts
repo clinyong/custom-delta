@@ -433,4 +433,32 @@ export default class Delta {
 
     return index;
   }
+
+  invert(base: Delta): Delta {
+    const thisIter = new OpIterator(this.ops);
+    const baseIter = new OpIterator(base.ops);
+    const inverted = new Delta();
+
+    while (thisIter.hasNext()) {
+      const peekOp = thisIter.peek();
+      if (peekOp.insert) {
+        inverted.delete(Op.length(peekOp));
+        thisIter.next();
+      } else if (peekOp.retain && !peekOp.attributes) {
+        const { thisOp } = getNextOp(thisIter, baseIter);
+        inverted.retain(thisOp.retain!);
+      } else if (peekOp.delete) {
+        const { otherOp: baseOp } = getNextOp(thisIter, baseIter);
+        inverted.push(baseOp);
+      } else if (peekOp.retain && peekOp.attributes) {
+        const { thisOp, otherOp: baseOp } = getNextOp(thisIter, baseIter);
+        inverted.retain(
+          thisOp.retain!,
+          AttributeMap.invert(thisOp.attributes, baseOp.attributes),
+        );
+      }
+    }
+
+    return inverted.chop();
+  }
 }
