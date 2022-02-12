@@ -37,6 +37,31 @@ function transformAttributes(
   return undefined;
 }
 
+function isNotExistAttribute(val: any) {
+  return typeof val === 'undefined';
+}
+
+function invertAttributes(
+  deltaAttr: AttributeMap,
+  baseAttr: AttributeMap = {},
+): AttributeMap {
+  const attr: AttributeMap = {};
+  Object.keys(deltaAttr).forEach((k) => {
+    if (deltaAttr[k] !== baseAttr[k]) {
+      if (isNotExistAttribute(deltaAttr[k])) {
+        // skip
+      } else if (isNotExistAttribute(baseAttr[k])) {
+        attr[k] = null;
+      } else {
+        // both exist
+        attr[k] = baseAttr[k];
+      }
+    }
+  });
+
+  return attr;
+}
+
 function filterNullAttributes(
   attributes?: AttributeMap,
 ): AttributeMap | undefined {
@@ -454,7 +479,7 @@ export default class Delta {
         const { thisOp, otherOp: baseOp } = getNextOp(thisIter, baseIter);
         inverted.retain(
           thisOp.retain!,
-          AttributeMap.invert(thisOp.attributes, baseOp.attributes),
+          invertAttributes(thisOp.attributes!, baseOp.attributes),
         );
       }
     }
